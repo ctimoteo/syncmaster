@@ -1,0 +1,16 @@
+{
+  "name": "syncmaster",
+  "version": "0.0.0",
+  "description": "app to syncronize files through ssh",
+  "main": "index.js",
+  "dependencies": {
+    "fsmonitor": "^0.2.2",
+    "ssh2": "^0.2.25"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
