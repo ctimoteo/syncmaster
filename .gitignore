@@ -1,3 +1,3 @@
 node_modules/
-logs/*
-config/*
+logs/*.log
+config/user_list.json
