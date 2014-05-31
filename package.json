@@ -1,7 +1,7 @@
 {
   "name": "syncmaster",
-  "version": "0.0.0",
-  "description": "app to syncronize files through ssh",
+  "version": "1.0.0",
+  "description": "module to syncronize files through ssh",
   "main": "index.js",
   "dependencies": {
     "ansi-color": "^0.2.1",
@@ -12,13 +12,12 @@
     "moment": "^2.6.0",
     "rsync": "^0.3.0",
     "ssh2": "^0.2.25",
-    "threads_a_gogo": "^0.1.7",
     "vm": "0.0.1"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Carlos Timóteo <ctimoteo@sapo.pt>",
+  "license": "MIT"
 }
