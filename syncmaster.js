@@ -1,18 +1,25 @@
 #!/usr/bin/env node
 
 //Modules Required
-var spawn     = require( 'child_process' ).spawn;
-var color     = require( 'ansi-color'    ).set;
-var fs        = require( 'fs'            );
-var vm        = require( 'vm'            );
-var jsonlint  = require( 'jsonlint'      );
-var bunyan    = require( 'bunyan'        );
-var moment    = require( 'moment'        );
-var fsmonitor = require( 'fsmonitor'     );
-var Rsync     = require( 'rsync'         );
+var spawn      = require( 'child_process' ).spawn;
+var color      = require( 'ansi-color'    ).set;
+var fs         = require( 'fs'            );
+var vm         = require( 'vm'            );
+var jsonlint   = require( 'jsonlint'      );
+var bunyan     = require( 'bunyan'        );
+var moment     = require( 'moment'        );
+var fsmonitor  = require( 'fsmonitor'     );
+var Rsync      = require( 'rsync'         );
+var Connection = require( 'ssh2'          );
+var util       = require(  'util'         );
+var domain     = require( 'domain'        );
+var cluster    = require( 'cluster'       );
 
-//Define variables
-var argv, re, tmp, user, machine, origin, target, key;
+//Define variables needed
+var argv, re, tmp, user, machine, origin, target, key, password, active_connection = false;
+
+//Initialize sript
+console.log( color( 'SyncMaster started...', 'green' ) );
 
 //Load argv
 argv = process.argv;
@@ -31,15 +38,13 @@ if ( argv.length < 5 ) {
 //Initialize logs
 var errors_log = bunyan.createLogger({
         name: 'errors_log',
-        streams: [
-            {
-                type: 'rotating-file',
-                path: 'logs/errors.log',
-                period: '1d', // daily rotation
-                count: 30, // keep 30 back copies
-                level: 'error'
-            }
-        ]
+        streams: [{
+            type: 'rotating-file',
+            path: 'logs/errors.log',
+            period: '1d', // daily rotation
+            count: 30, // keep 30 back copies
+            level: 'error'
+        }]
     });
 
 //Retrieve args data
@@ -66,7 +71,7 @@ else {
     return;
 }
 
-//Load config
+//Load configs
 try {
     var config = fs.readFileSync( './config/user_list.json', 'utf8' );
 
@@ -84,74 +89,263 @@ catch ( error ) {
     return;
 }
 
-//Verify if key is configured for user/machine
-if ( config[user] && config[user].machine[machine] ) {
-    key = config[user].machine[machine];
+//Verify if key/password is configured for user/machine
+if ( config[user] && config[user][machine] && config[user][machine].key && config[user][machine].password ) {
+    key      = config[user][machine].key;
+    password = config[user][machine].password;
 }
 else {
     //Log error
-    errors_log.error( 'Failed to retrieve ssh key for user ' + user + ' to machine ' + machine );
+    errors_log.error( 'Failed to retrieve ssh key/password for user ' + user + ' to machine ' + machine );
 
     //Exit with error
-    console.log( "\n" + color( 'Failed to retrieve ssh key for user' + user + ' to machine ' + machine, 'red' ) + "\n");
+    console.log( "\n" + color( 'Failed to retrieve ssh key/password for user' + user + ' to machine ' + machine, 'red' ) + "\n");
 
     //End process
     return;
 }
 
-//Sync origin with target destination
+//Setup options for sending files through connection
+var OptionsForSFTP = {
+    host:       machine,
+    port:       22,
+    username:   user,
+    passphrase: password,
+    privateKey: fs.readFileSync( key )
+};
+
+//Sync origin with target destination first
 var rsync = new Rsync()
     .shell('ssh')
-    .flags('avrz')
+    .flags('arz')
     .delete()
+    .quiet()
     .source( origin )
     .destination( user + '@' + machine + ':' + target )
-    .debug(true);
+    .debug(false);
 
+//Log rsync errors
 rsync.output(
     function(data){
-        // do things like parse progress
+        //nothing to do on success
     }, function(data) {
-
-        console.log( 'err: ' + data );
-
-        // do things like parse error output
+        //Log to file the std err
+        errors_log.error( data );
     }
 );
 
-// Execute the command
+// Execute the rsync command
 rsync.execute(function(error, code, cmd) {
-    //Monitor origin folder
+    //Print rsync success
+    console.log(color('Target is syncronized! Lets wait for changes...', 'green'));
+
+    //Log errors too
+    if ( error ) {
+        errors_log.error( error );
+    }
+
+    //Handle Syncronization
+    handleSycronization(user, machine, key, password, origin, target);
+});
+
+//Main function to maintain syncronization
+function handleSycronization( user, machine, key, password, origin, target ) {
+    console.log( color( 'Handle syncronization', 'green') );
+
+    //Initialize the ssh connection
+    var connection = new Connection(),
+        handler = domain.create();
+
+    //Handle connection errors
+    handler.on( 'error', function( error ) {
+        //Log connection errors
+        errors_log.error( error );
+    });
+
+    // Handling "error" event inside domain handler.
+    handler.add( connection );
+
+    connection.on('connect', function() {
+        console.log( color( 'Connection :: connect', 'green' ) );
+    });
+
+    //Handle connection end
+    connection.on( 'end', function() {
+        console.log( color( 'Connection end!', 'red' ) );
+
+        //show new file
+        connection.on( 'ready', function () {
+            console.log( color( 'Connection restarted...', 'red' ) );
+
+            //Syncronize file with target
+            rsync.execute( function( error, code, cmd ) {
+                console.log( color('NEED TO RESTART SYNCRONIZATION', 'red'));
+
+                handleSycronization( user, machine, key, password, origin, target );
+            });
+        });
+
+        //Create a new connection again
+        connection.connect( OptionsForSFTP );
+    });
+
+    //Watch for files changes on origin
     fsmonitor.watch( origin, '', function(change) {
-        //Syncronize file with target
-        rsync.execute( function( error, code, cmd ) {} );
+        //File added, upload to target
+        if ( change.addedFiles ) {
+            //Loop through files added
+            change.addedFiles.forEach(
+                function( file ) {
+                    if ( !active_connection ) { //only connect once
+                        //show new file
+                        connection.on( 'ready', function () {
+                            sendFile( file, connection );
+                        });
+
+                        connection.connect( OptionsForSFTP );
+
+                        //Mark active connection
+                        active_connection = true;
+                    }
+                    else {  //We have a ready connection, send file
+                        sendFile( file, connection );
+                    }
+                }
+            );
+        }
+
+        //File modified, upload to target
+        if ( change.modifiedFiles ) {
+            //Loop through files added
+            change.modifiedFiles.forEach(
+                function( file ) {
+                    if ( !active_connection ) { //only connect once
+                        //show new file
+                        connection.on( 'ready', function () {
+                            sendFile( file, connection );
+                        });
+
+                        connection.connect( OptionsForSFTP );
+
+                        //Mark active connection
+                        active_connection = true;
+                    }
+                    else {  //We have a ready connection, send file
+                        sendFile( file, connection );
+                    }
+                }
+            );
+        }
+
+        if ( change.removedFiles ) {  //File added, upload to target
+            //Loop through files added
+            change.removedFiles.forEach(
+                function( file ) {
+                    if ( !active_connection ) { //only connect once
+                        //show new file
+                        connection.on( 'ready', function () {
+                            removeFile( file, connection );
+                        });
+
+                        connection.connect( OptionsForSFTP );
+
+                        //Mark active connection
+                        active_connection = true;
+                    }
+                    else {  //We have a ready connection, send file
+                        removeFile( file, connection );
+                    }
+                }
+            );
+        }
 
         /*console.log("Change detected:\n" + change);  //has a nice toString
-        console.log("Added files:    %j", change.addedFiles);
-        console.log("Modified files: %j", change.modifiedFiles);
-        console.log("Removed files:  %j", change.removedFiles);
-
         console.log("Added folders:    %j", change.addedFolders);
         console.log("Modified folders: %j", change.modifiedFolders);
         console.log("Removed folders:  %j", change.removedFolders);*/
     });
-});
+}
+
+//Auxiliary function to add or modify files
+function sendFile( file, connection ) {
+    //Initialize operation
+    connection.sftp(
+        function( err, sftp) {
+            if ( err ) {
+                console.log( "Error, problem starting SFTP: %s", err );
+                return;
+            }
+
+            sftp.fastPut( origin + file, target + '/' + file,
+                {
+                    flags: 'w',
+                    encoding: 'utf-8',
+                    mode: 0666,
+                    autoClose: true
+                },
+                function(err) {
+                    if ( err ) {
+                        console.log( "Error, transfering file: %s", err );
+                    }
+
+                    //End operation
+                    sftp.end();
+                }
+            );
+        }
+    );
+}
+
+//Auxiliary function to remove files
+function removeFile( file, connection ) {
+    //Initialize operation
+    connection.sftp(
+        function( err, sftp) {
+            if ( err ) {
+                console.log( "Error, problem starting SFTP: %s", err );
+                return;
+            }
+
+            sftp.unlink( target + '/' + file,
+                function(err) {
+                    if ( err ) {
+                        console.log( 'FAILED to unlink ' + file );
+                    }
+
+                    //End operation
+                    sftp.end();
+                }
+            );
+
+        }
+    );
+}
 
 //Handle Process Exceptions
 process.on('SIGUSR2', function () {
-    log.reopenFileStreams();
+    //Log signal
+    console.log( color( 'SIGUSR2 signal thriggered!', 'red' ) );
 });
 
 process.on('uncaughtException', function (err) {
     //Get error trace
     var stack = new Error(err).stack;
 
-    console.log(color('Uncaught Exception:', 'red+underline'));
+    console.log( color('Uncaught Exception:', 'red+underline'));
 
-    console.error(err);
+    console.error( err );
 
     //Show stack trace
-    console.log(stack);
+    console.log( stack );
 
-    errors_log.error(err, 'Uncaught Exception');
+    //Log to file
+    errors_log.error( err, 'Uncaught Exception' );
+
+    //Just as a failsafe rsync files
+    //Syncronize file with target
+    rsync.execute( function( error, code, cmd ) {
+        console.log( color('NEED TO RESTART SYNCRONIZATION', 'red'));
+
+        handleSycronization( user, machine, key, password, origin, target );
+    });
 });
