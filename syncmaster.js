@@ -288,6 +288,8 @@ function sendFile( file, connection ) {
                         console.log( "Error, transfering file: %s", err );
                     }
 
+                    console.log( 'sendFile: ' + file );
+
                     //End operation
                     sftp.end();
                 }
@@ -311,6 +313,8 @@ function removeFile( file, connection ) {
                     if ( err ) {
                         console.log( 'FAILED to unlink ' + file );
                     }
+
+                    console.log( 'removeFile:' + file );
 
                     //End operation
                     sftp.end();
