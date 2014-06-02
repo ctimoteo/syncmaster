@@ -165,6 +165,11 @@ function handleSycronization( user, machine, key, password, origin, target ) {
     // Handling "error" event inside domain handler.
     handler.add( connection );
 
+    connection.on('error', function() {
+        //Log connection errors
+        errors_log.error( error );
+    });
+
     connection.on('connect', function() {
         console.log( color( 'Connection :: connect', 'green' ) );
     });
@@ -172,6 +177,25 @@ function handleSycronization( user, machine, key, password, origin, target ) {
     //Handle connection end
     connection.on( 'end', function() {
         console.log( color( 'Connection end!', 'red' ) );
+
+        //show new file
+        connection.on( 'ready', function () {
+            console.log( color( 'Connection restarted...', 'red' ) );
+
+            //Syncronize file with target
+            rsync.execute( function( error, code, cmd ) {
+                console.log( color('NEED TO RESTART SYNCRONIZATION', 'red'));
+
+                handleSycronization( user, machine, key, password, origin, target );
+            });
+        });
+
+        //Create a new connection again
+        connection.connect( OptionsForSFTP );
+    });
+
+    connection.on( 'close', function() {
+        console.log( color( 'Connection closed!', 'red' ) );
 
         //show new file
         connection.on( 'ready', function () {
