@@ -240,7 +240,7 @@ function handleSycronization( user, machine, key, password, origin, target ) {
 
         //File modified, upload to target
         if ( change.modifiedFiles ) {
-            //Loop through files added
+            //Loop through files updated
             change.modifiedFiles.forEach(
                 function( file ) {
                     if ( !active_connection ) { //only connect once
@@ -261,8 +261,8 @@ function handleSycronization( user, machine, key, password, origin, target ) {
             );
         }
 
-        if ( change.removedFiles ) {  //File added, upload to target
-            //Loop through files added
+        if ( change.removedFiles ) {  //File removed, upload to target
+            //Loop through files removed
             change.removedFiles.forEach(
                 function( file ) {
                     if ( !active_connection ) { //only connect once
@@ -283,10 +283,72 @@ function handleSycronization( user, machine, key, password, origin, target ) {
             );
         }
 
-        /*console.log("Change detected:\n" + change);  //has a nice toString
-        console.log("Added folders:    %j", change.addedFolders);
-        console.log("Modified folders: %j", change.modifiedFolders);
-        console.log("Removed folders:  %j", change.removedFolders);*/
+        if (change.addedFolders) {  //Folder added, create on target
+            //Loop through files removed
+            change.addedFolders.forEach(
+                function( folder ) {
+                    if ( !active_connection ) { //only connect once
+                        //show new file
+                        connection.on( 'ready', function () {
+                            addFolder( folder, connection );
+                        });
+
+                        connection.connect( OptionsForSFTP );
+
+                        //Mark active connection
+                        active_connection = true;
+                    }
+                    else {  //We have a ready connection, send file
+                        addFolder( folder, connection );
+                    }
+                }
+            );
+        }
+
+        if (change.modifiedFolders) {  //Folder updated, change on target
+
+            //Loop through files removed
+            change.modifiedFolders.forEach(
+                function( folder ) {
+                    if ( !active_connection ) { //only connect once
+                        //show new file
+                        connection.on( 'ready', function () {
+                            updateFolder( folder, connection );
+                        });
+
+                        connection.connect( OptionsForSFTP );
+
+                        //Mark active connection
+                        active_connection = true;
+                    }
+                    else {  //We have a ready connection, send file
+                        updateFolder( folder, connection );
+                    }
+                }
+            );
+        }
+
+        if (change.removedFolders) {  //Folder removed, removed from target
+            //Loop through files removed
+            change.removedFolders.forEach(
+                function( folder ) {
+                    if ( !active_connection ) { //only connect once
+                        //show new file
+                        connection.on( 'ready', function () {
+                            deleteFolder( folder, connection );
+                        });
+
+                        connection.connect( OptionsForSFTP );
+
+                        //Mark active connection
+                        active_connection = true;
+                    }
+                    else {  //We have a ready connection, send file
+                        deleteFolder( folder, connection );
+                    }
+                }
+            );
+        }
     });
 }
 
@@ -311,8 +373,9 @@ function sendFile( file, connection ) {
                     if ( err ) {
                         console.log( "Error, transfering file: %s", err );
                     }
-
-                    console.log( 'sendFile: ' + file );
+                    else {
+                        console.log( 'sendedFile: ' + file );
+                    }
 
                     //End operation
                     sftp.end();
@@ -335,7 +398,68 @@ function removeFile( file, connection ) {
             sftp.unlink( target + '/' + file,
                 function(err) {
                     if ( err ) {
-                        console.log( 'FAILED to unlink ' + file );
+                        console.log( 'FAILED to remove file: ' + file );
+                    }
+                    else {
+                        console.log( 'removedFile: ' + file );
+                    }
+
+                    //End operation
+                    sftp.end();
+                }
+            );
+
+        }
+    );
+}
+
+//Auxiliary function to create folder
+function addFolder( folder, connection ) {
+    //Initialize operation
+    connection.sftp(
+        function( err, sftp) {
+            if ( err ) {
+                console.log( "Error, problem starting SFTP: %s", err );
+                return;
+            }
+
+            sftp.mkdir( target + '/' + folder,
+                function(err) {
+                    if ( err ) {
+                        console.log( 'FAILED to create folder: ' + folder );
+                    }
+                    else {
+                        console.log( 'addedFolder: ' + folder );
+                    }
+
+                    //End operation
+                    sftp.end();
+                }
+            );
+
+        }
+    );
+}
+
+//Auxiliary function to create folder
+function updateFolder( folder, connection ) {
+
+    console.log( color('NEED TO ADD UPDATE FOLDER?', 'yellow') );
+
+    console.log( folder );
+
+    /*//Initialize operation
+    connection.sftp(
+        function( err, sftp) {
+            if ( err ) {
+                console.log( "Error, problem starting SFTP: %s", err );
+                return;
+            }
+
+            sftp.rename( target + '/' + folder,
+                function(err) {
+                    if ( err ) {
+                        console.log( 'FAILED to unlink ' + folder );
                     }
 
                     console.log( 'removeFile:' + file );
@@ -345,6 +469,38 @@ function removeFile( file, connection ) {
                 }
             );
 
+        }
+    );*/
+}
+
+//Auxiliary function to create folder
+function deleteFolder( folder, connection ) {
+    //Initialize operation
+    connection.sftp(
+        function( err, sftp) {
+            if ( err ) {
+                console.log( "Error, problem starting SFTP: %s", err );
+                return;
+            }
+
+            sftp.rmdir( target + '/' + folder,
+                function(err) {
+                    if ( err ) {
+                        console.log( 'FAILED to remove folder: ' + folder );
+
+                        console.log( 'Retry delete...' );
+
+                        //Retry...
+                        deleteFolder( folder, connection );
+                    }
+                    else {
+                        console.log( 'removedFolder: ' + folder );
+                    }
+
+                    //End operation
+                    sftp.end();
+                }
+            );
         }
     );
 }
