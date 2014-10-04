@@ -1,7 +1,8 @@
 {
-    "USER1": {
-        "machine": {
-            "MACHINE1": "KEY1"
-        }
+  "USER1": {
+    "MACHINE1": {
+      "key": "KEY1",
+      "password": "PASSWORD1"
     }
+  }
 }
