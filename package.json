@@ -7,9 +7,9 @@
     "ansi-color": "^0.2.1",
     "bunyan": "^0.22.3",
     "carrier": "^0.1.14",
-    "fsmonitor": "^0.2.2",
-    "jsonlint": "^1.6.0",
-    "moment": "^2.6.0",
+    "fsmonitor": "^0.2.4",
+    "jsonlint": "^1.6.2",
+    "moment": "^2.8.3",
     "rsync": "^0.3.0",
     "ssh2": "^0.2.25",
     "vm": "0.0.1"
