@@ -7,6 +7,7 @@
     "ansi-color": "^0.2.1",
     "bunyan": "^0.22.3",
     "carrier": "^0.1.14",
+    "cli-prompt": "^0.4.1",
     "fsmonitor": "^0.2.4",
     "jsonlint": "^1.6.2",
     "moment": "^2.8.3",
