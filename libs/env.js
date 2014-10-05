@@ -48,6 +48,18 @@ function checkScriptArgs() {
     origin = argv[3];
     target = argv[4];
 
+    //Ensure that origin ends with /
+    if ( origin[origin.length - 1] !== '/' ) {
+        //Add slash to origin
+        origin += '/';
+    }
+
+    //Ensure that target ends with /
+    if ( target[target.length - 1] !== '/' ) {
+        //Add slash to origin
+        target += '/';
+    }
+
     //Parse user/machine
     re = /(.+)@(.+)/;
     tmp = argv[2].match(re);
@@ -91,29 +103,42 @@ function loadSyncEnv(machine, origin, target, user, password, key) {
         privateKey: fs.readFileSync(key)
     };
 
-    /*console.log( origin );
-    console.log( target );
+    //Ensure that origin ends with /
+    if ( origin[origin.length - 1] !== '/' ) {
+        //Add slash to origin
+        new_origin = origin + '/';
+    }
+    else {
+        new_origin = origin;
+    }
 
-    process.exit(1);*/
+    //Ensure that target ends with /
+    if ( target[target.length - 1] !== '/' ) {
+        //Add slash to origin
+        new_target = target + '/';
+    }
+    else {
+        new_target = target;
+    }
 
     //Sync target with origin
     rsync = new Rsync()
         .shell('ssh')
-        .flags('avz')
+        .flags('avrz')
         .delete()
         .quiet()
-        .source(origin)
-        .destination(user + '@' + machine + ':' + target)
+        .source(new_origin)
+        .destination(user + '@' + machine + ':' + new_target)
         .debug(false);
 
     //Sync origin with target
     rsync2 = new Rsync()
         .shell('ssh')
-        .flags('avz')
+        .flags('avrz')
         .delete()
         .quiet()
-        .source(user + '@' + machine + ':' + target)
-        .destination(origin)
+        .source(user + '@' + machine + ':' + new_target)
+        .destination(new_origin)
         .debug(false);
 }
 
