@@ -135,6 +135,20 @@ setTimeout(
     2000 //wait 1s
 );
 
+//Check if there are files on queue to process
+setInterval(
+    function() {
+        console.log(color('Checking file change queue...', 'green'));
+
+        if (fileActionsQueue.length > 0) {
+            console.log( 'There are ' + fileActionsQueue.length + ' changes to process! (1)' );
+
+            queues.processQueues();
+        }
+    },
+    30000
+);
+
 //Main function to maintain syncronization
 function handleSycronization(user, machine, key, password, origin, target) {
     //Watch for files changes on origin
@@ -145,7 +159,7 @@ function handleSycronization(user, machine, key, password, origin, target) {
             change.addedFiles.forEach(
                 function(file) {
                     if (!active_connection) { //Queue file
-                        sendFileQueue.push({file: file});
+                        fileActionsQueue.push({path: file, action: 'sendFile'});
                     }
                     else { //We have a ready connection, send file
                         commands.sendFile(file, connection);
@@ -159,7 +173,7 @@ function handleSycronization(user, machine, key, password, origin, target) {
             change.modifiedFiles.forEach(
                 function(file) {
                     if (!active_connection) { //Queue file
-                        sendFileQueue.push({file: file});
+                        fileActionsQueue.push({path: file, action: 'sendFile'});
                     }
                     else { //We have a ready connection, send file
                         commands.sendFile(file, connection);
@@ -173,7 +187,7 @@ function handleSycronization(user, machine, key, password, origin, target) {
             change.removedFiles.forEach(
                 function(file) {
                     if (!active_connection) { //Queue file
-                        removeFileQueue.push({file: file});
+                        fileActionsQueue.push({path: file, action: 'removeFile'});
                     }
                     else { //We have a ready connection, send file
                         commands.removeFile(file, connection);
@@ -187,7 +201,7 @@ function handleSycronization(user, machine, key, password, origin, target) {
             change.addedFolders.forEach(
                 function(folder) {
                     if (!active_connection) { //Queue file
-                        addFolderQueue.push({file: file});
+                        fileActionsQueue.push({path: folder, action: 'addFolder'});
                     }
                     else { //We have a ready connection, send file
                         commands.addFolder(folder, connection);
@@ -201,7 +215,7 @@ function handleSycronization(user, machine, key, password, origin, target) {
             change.modifiedFolders.forEach(
                 function(folder) {
                     if (!active_connection) { //Queue file
-                        updateFolderQueue.push({file: file});
+                        fileActionsQueue.push({path: folder, action: 'updateFolder' });
                     }
                     else { //We have a ready connection, send file
                         commands.updateFolder(folder, connection);
@@ -215,7 +229,7 @@ function handleSycronization(user, machine, key, password, origin, target) {
             change.removedFolders.forEach(
                 function(folder) {
                     if (!active_connection) { //Queue file
-                        deleteFolderQueue.push({file: file});
+                        fileActionsQueue.push({path: folder, action: 'deleteFolder'});
                     }
                     else { //We have a ready connection, send file
                         commands.deleteFolder(folder, connection);
