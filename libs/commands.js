@@ -1,6 +1,3 @@
-//Get required modules
-var color = require('ansi-color').set;
-
 //Auxiliary function to add or modify files
 function sendFile(file, connection) {
     //Check active connection or enqueue request
@@ -17,7 +14,7 @@ function sendFile(file, connection) {
             function(err) {
                 if (err) {
                     console.log('Error, transfering file: ' + origin + file);
-
+                    //Send to logs
                     errors_log.debug(err);
                 }
                 else {
@@ -42,7 +39,7 @@ function removeFile(file, connection) {
             function(err) {
                 if (err) {
                     console.log('FAILED to remove file: ' + target + '/' + file);
-
+                    //Send to logs
                     errors_log.debug(err);
                 }
                 else {
@@ -67,7 +64,7 @@ function addFolder(folder, connection) {
             function(err) {
                 if (err) {
                     console.log('FAILED to remove file: ' + target + '/' + folder);
-
+                    //Send to logs
                     errors_log.debug(err);
                 }
                 else {
@@ -93,7 +90,7 @@ function updateFolder(folder, connection) {
             function(err) {
                 if ( err ) {
                     console.log('FAILED to unlink ' + target + '/' + folder);
-
+                    //Send to logs
                     errors_log.debug(err);
                 }
                 else {
@@ -105,7 +102,7 @@ function updateFolder(folder, connection) {
         );
     }
     else {  //Ok, queue file change
-        fileActionsQueue.push({path: target + '/' + folder, action: 'updateFolder'});
+        fileActionsQueue.push({path: origin + '/' + folder, dest_path: target + '/' + folder , action: 'updateFolder'});
     }
 }
 
@@ -118,7 +115,7 @@ function deleteFolder(folder, connection) {
             function(err) {
                 if (err) {
                     console.log('FAILED to remove folder: ' + target + '/' + folder);
-
+                    //Send to logs
                     errors_log.debug(err);
                 }
                 else {
