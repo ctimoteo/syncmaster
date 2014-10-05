@@ -15,12 +15,14 @@ function setGlobalConnectionHandlers() {
         console.log(color('Connection::connect', 'white'));
     });
     //Connection is ready
-    connection.on('ready', function(){
+    connection.on('ready', function() {
         console.log(color('Connection ready...', 'yellow'));
+        //Check if are changes in queue
+        if (fileActionsQueue.length > 0) {
+            console.log( 'There are ' + fileActionsQueue.length + ' changes to process! (2)' );
 
-        //Ensure all files are processed
-        queues.processQueues();
-
+            queues.processQueues();
+        }
         //Initialize operation
         connection.sftp(
             function(err, sftp) {
@@ -30,6 +32,7 @@ function setGlobalConnectionHandlers() {
                 }
                 //Use sftp connection in all requests
                 active_sftp = sftp;
+
                 //Mark active connection
                 active_connection = true;
             }
