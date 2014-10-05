@@ -28,15 +28,12 @@ function setGlobalConnectionHandlers() {
                     console.log("Error, problem starting SFTP: %s", err);
                     return;
                 }
-
                 //Use sftp connection in all requests
                 active_sftp = sftp;
-
                 //Mark active connection
                 active_connection = true;
             }
         );
-
     });
     //Handle connection end
     connection.on('end', function() {
