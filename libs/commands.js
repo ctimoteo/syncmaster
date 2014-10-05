@@ -4,7 +4,7 @@ function sendFile(file, connection) {
     if ( active_connection ) {
         active_sftp.fastPut(
             origin + file,
-            target + '/' + file,
+            target + file,
             {
                 flags: 'w',
                 encoding: 'utf-8',
@@ -13,7 +13,7 @@ function sendFile(file, connection) {
             },
             function(err) {
                 if (err) {
-                    console.log('Error, transfering file: ' + origin + file);
+                    //console.log('Error, transfering file: ' + origin + file);
                     //Send to logs
                     errors_log.debug(err);
                 }
@@ -22,11 +22,10 @@ function sendFile(file, connection) {
                 }
                 //End operation
                 //active_sftp.end();
-            }
-        );
+            }        );
     }
     else {  //Ok, queue file change
-        fileActionsQueue.push( { path: origin + file, dest_path: target + '/' + file, action: 'sendFile' })
+        fileActionsQueue.push( { path: file, action: 'sendFile' })
     }
 }
 
@@ -35,10 +34,10 @@ function removeFile(file, connection) {
     //Initialize operation
     if (active_connection) {
         active_sftp.unlink(
-            target + '/' + file,
+            target + file,
             function(err) {
                 if (err) {
-                    console.log('FAILED to remove file: ' + target + '/' + file);
+                    //console.log('FAILED to remove file: ' + target + file);
                     //Send to logs
                     errors_log.debug(err);
                 }
@@ -51,7 +50,7 @@ function removeFile(file, connection) {
         );
     }
     else {  //Ok, queue file remove
-        fileActionsQueue.push({path: target + '/' + file, action: 'removeFile'});
+        fileActionsQueue.push({path: file, action: 'removeFile'});
     }
 }
 
@@ -60,10 +59,10 @@ function addFolder(folder, connection) {
     //Initialize operation
     if (active_connection) {
         active_sftp.mkdir(
-            target + '/' + folder,
+            target + folder,
             function(err) {
                 if (err) {
-                    console.log('FAILED to remove file: ' + target + '/' + folder);
+                    //console.log('FAILED to remove file: ' + target + folder);
                     //Send to logs
                     errors_log.debug(err);
                 }
@@ -76,7 +75,7 @@ function addFolder(folder, connection) {
         );
     }
     else {  //Ok, queue file change
-        fileActionsQueue.push({path: target + '/' + folder, action: 'addFolder'});
+        fileActionsQueue.push({path: folder, action: 'addFolder'});
     }
 }
 
@@ -85,16 +84,16 @@ function updateFolder(folder, connection) {
     //Initialize operation
     if (active_connection) {
         active_sftp.rename(
-            origin + '/' + folder,
-            target + '/' + folder,
+            origin + folder,
+            target + folder,
             function(err) {
                 if ( err ) {
-                    console.log('FAILED to unlink ' + target + '/' + folder);
+                    //console.log('FAILED to unlink ' + target + folder);
                     //Send to logs
                     errors_log.debug(err);
                 }
                 else {
-                    console.log( 'removeFile:' + file );
+                    console.log( 'removeFile:' + '/' + file );
                 }
                 //End operation
                 //active_sftp.end();
@@ -102,7 +101,7 @@ function updateFolder(folder, connection) {
         );
     }
     else {  //Ok, queue file change
-        fileActionsQueue.push({path: origin + '/' + folder, dest_path: target + '/' + folder , action: 'updateFolder'});
+        fileActionsQueue.push({path: folder, action: 'updateFolder'});
     }
 }
 
@@ -111,10 +110,10 @@ function deleteFolder(folder, connection) {
     //Initialize operation
     if (active_connection) {
         active_sftp.rmdir(
-            target + '/' + folder,
+            target + folder,
             function(err) {
                 if (err) {
-                    console.log('FAILED to remove folder: ' + target + '/' + folder);
+                    //console.log('FAILED to remove folder: ' + target + folder);
                     //Send to logs
                     errors_log.debug(err);
                 }
@@ -127,7 +126,7 @@ function deleteFolder(folder, connection) {
         );
     }
     else {  //Ok, queue file change
-        fileActionsQueue.push({path: target + '/' + folder, action: 'deleteFolder'});
+        fileActionsQueue.push({path: folder, action: 'deleteFolder'});
     }
 }
 
