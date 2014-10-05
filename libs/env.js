@@ -10,6 +10,7 @@ function setGlobalVariables() {
     GLOBAL.handler           = null;
     GLOBAL.errors_log        = null;
     GLOBAL.rsync             = null;
+    GLOBAL.rsync2            = null;
     GLOBAL.user              = null;
     GLOBAL.origin            = null;
     GLOBAL.target            = null;
@@ -89,14 +90,30 @@ function loadSyncEnv(machine, origin, target, user, password, key) {
         passphrase: password,
         privateKey: fs.readFileSync(key)
     };
-    //Sync origin with target destination first
+
+    /*console.log( origin );
+    console.log( target );
+
+    process.exit(1);*/
+
+    //Sync target with origin
     rsync = new Rsync()
         .shell('ssh')
-        .flags('arz')
+        .flags('avz')
         .delete()
         .quiet()
         .source(origin)
         .destination(user + '@' + machine + ':' + target)
+        .debug(false);
+
+    //Sync origin with target
+    rsync2 = new Rsync()
+        .shell('ssh')
+        .flags('avz')
+        .delete()
+        .quiet()
+        .source(user + '@' + machine + ':' + target)
+        .destination(origin)
         .debug(false);
 }
 
