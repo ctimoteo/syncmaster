@@ -3,16 +3,16 @@
 'use strict';
 
 //Modules Required
-var color      = require( 'ansi-color' ).set;
-var fs         = require( 'fs'         );
-var fsmonitor  = require( 'fsmonitor'  );
-var jsonlint   = require( 'jsonlint'   );
+var color     = require( 'ansi-color' ).set;
+var fs        = require( 'fs'         );
+var fsmonitor = require( 'fsmonitor'  );
+var jsonlint  = require( 'jsonlint'   );
+var prompt    = require( 'cli-prompt' );
 
 //Get my libs
 var commands    = require( './libs/commands.js'    );
 var env         = require( './libs/env.js'         );
 var connections = require( './libs/connections.js' );
-
 var queues      = require( './libs/queues.js'      );
 
 //Load global variables
@@ -62,17 +62,78 @@ rsync.output(
     }
 );
 
-//Execute the rsync command
-rsync.execute( function(error, code, cmd) {
-    //Print rsync success
-    console.log(color('Target is syncronized! Lets wait for changes...', 'white'));
-    //Log errors too
-    if (error) {
-        errors_log.error(error);
+rsync2.output(
+    function(data) {
+        //nothing to do on success
+    },
+    function(data) {
+        //Log to file the std err
+        errors_log.error(data);
     }
-    //start syncronization
-    handleSycronization(user, machine, key, password, origin, target);
-});
+);
+
+//Defer prompt's
+setTimeout(
+    function() {
+        //Ask user if wants to syncronize origin from target
+        prompt('Syncronize all from target? Yes/[No] ', function (val) {
+            if ( val === 'n' || val === 'N' || !val ) {
+                //Ask user if wants to syncronize all on target
+                prompt('Syncronize all to target? [Yes]/No ', function (val) {
+                    if ( val[0] === 'y' || val[0] === 'Y' || val[0] === 's' || val[0] === 'S' || !val ) {
+                        //Execute the rsync command
+                        rsync.execute( function(error, code, cmd) {
+                            //Print rsync success
+                            console.log(color('Target is syncronized! Lets wait for changes...', 'white'));
+                            //Log errors too
+                            if (error) {
+                                errors_log.error(error);
+                            }
+                            //start syncronization
+                            handleSycronization(user, machine, key, password, origin, target);
+                        });
+                    }
+                    else { //Don't syncronize at start
+                        //start syncronization
+                        handleSycronization(user, machine, key, password, origin, target);
+                    }
+                });
+            }
+            else { //Don't syncronize from target at start
+                //Execute the rsync command
+                rsync2.execute( function(error, code, cmd) {
+                    //Print rsync success
+                    console.log(color('Origin is syncronized! Lets wait for changes...', 'white'));
+                    //Log errors too
+                    if (error) {
+                        errors_log.error(error);
+                    }
+                    //Ask user if wants to syncronize all on target
+                    prompt('Syncronize all to target? [Yes]/No ', function (val) {
+                        if ( val[0] === 'y' || val[0] === 'Y' || val[0] === 's' || val[0] === 'S' || !val ) {
+                            //Execute the rsync command
+                            rsync.execute( function(error, code, cmd) {
+                                //Print rsync success
+                                console.log(color('Target is syncronized! Lets wait for changes...', 'white'));
+                                //Log errors too
+                                if (error) {
+                                    errors_log.error(error);
+                                }
+                                //start syncronization
+                                handleSycronization(user, machine, key, password, origin, target);
+                            });
+                        }
+                        else { //Don't syncronize at start
+                            //start syncronization
+                            handleSycronization(user, machine, key, password, origin, target);
+                        }
+                    });
+                });
+            }
+        });
+    },
+    2000 //wait 1s
+);
 
 //Main function to maintain syncronization
 function handleSycronization(user, machine, key, password, origin, target) {
