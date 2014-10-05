@@ -43,23 +43,19 @@ function checkScriptArgs() {
         //End process
         return;
     }
-
     //Retrieve args data
     origin = argv[3];
     target = argv[4];
-
     //Ensure that origin ends with /
     if ( origin[origin.length - 1] !== '/' ) {
         //Add slash to origin
         origin += '/';
     }
-
     //Ensure that target ends with /
     if ( target[target.length - 1] !== '/' ) {
         //Add slash to origin
         target += '/';
     }
-
     //Parse user/machine
     re = /(.+)@(.+)/;
     tmp = argv[2].match(re);
@@ -102,7 +98,6 @@ function loadSyncEnv(machine, origin, target, user, password, key) {
         passphrase: password,
         privateKey: fs.readFileSync(key)
     };
-
     //Ensure that origin ends with /
     if ( origin[origin.length - 1] !== '/' ) {
         //Add slash to origin
@@ -111,7 +106,6 @@ function loadSyncEnv(machine, origin, target, user, password, key) {
     else {
         new_origin = origin;
     }
-
     //Ensure that target ends with /
     if ( target[target.length - 1] !== '/' ) {
         //Add slash to origin
@@ -120,7 +114,6 @@ function loadSyncEnv(machine, origin, target, user, password, key) {
     else {
         new_target = target;
     }
-
     //Sync target with origin
     rsync = new Rsync()
         .shell('ssh')
@@ -130,7 +123,6 @@ function loadSyncEnv(machine, origin, target, user, password, key) {
         .source(new_origin)
         .destination(user + '@' + machine + ':' + new_target)
         .debug(false);
-
     //Sync origin with target
     rsync2 = new Rsync()
         .shell('ssh')
