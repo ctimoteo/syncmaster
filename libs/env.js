@@ -96,7 +96,8 @@ function loadSyncEnv(machine, origin, target, user, password, key) {
         port: 22,
         username: user,
         passphrase: password,
-        privateKey: fs.readFileSync(key)
+        privateKey: fs.readFileSync(key),
+        readyTimeout: 300000
     };
     //Ensure that origin ends with /
     if ( origin[origin.length - 1] !== '/' ) {
