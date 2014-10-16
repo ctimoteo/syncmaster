@@ -2,11 +2,11 @@
 var Connection = require( 'ssh2'   );
 var domain     = require( 'domain' );
 
-//Add my libs
-var handlers = require( './handlers.js' );
-
 //Auxiliary function to initialize/re-initialize ssh connection
 function initializeConnection() {
+    //Add my libs
+    var handlers = require( './handlers.js' );
+
     //Initialize the ssh connection
     connection = new Connection(),
         handler = domain.create();
@@ -27,6 +27,6 @@ function resetConnection() {
 
 //Expose handlers public API
 module.exports = {
-    initializeConnection: initializeConnection,
-    resetConnection: resetConnection
+    resetConnection: resetConnection,
+    initializeConnection: initializeConnection
 };
