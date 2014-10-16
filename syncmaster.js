@@ -22,7 +22,7 @@ env.setGlobalVariables();
 env.initializeLogs();
 
 //Initialize sript
-console.log(color('SyncMaster started...', 'white'));
+console.log(color('SyncMaster started...', 'blue'));
 
 //Load argv
 argv = process.argv;
@@ -76,7 +76,7 @@ rsync2.output(
 setTimeout(
     function() {
         //Ask user if wants to syncronize origin from target
-        prompt('Syncronize all from target? Yes/[No] ', function (val) {
+        prompt( 'Syncronize all from target? Yes/[No] ', function (val) {
             if ( val === 'n' || val === 'N' || !val ) {
                 //Ask user if wants to syncronize all on target
                 prompt('Syncronize all to target? [Yes]/No ', function (val) {
@@ -136,18 +136,18 @@ setTimeout(
 );
 
 //Check if there are files on queue to process
-setInterval(
-    function() {
-        console.log(color('Checking file change queue...', 'green'));
-
-        if (fileActionsQueue.length > 0) {
-            console.log( 'There are ' + fileActionsQueue.length + ' changes to process! (1)' );
-
-            queues.processQueues();
-        }
-    },
-    30000
-);
+//setInterval(
+//    function() {
+//        console.log(color('Checking file change queue...', 'green'));
+//
+//        if (fileActionsQueue.length > 0) {
+//            console.log( 'There are ' + fileActionsQueue.length + ' changes to process! (1)' );
+//
+//            queues.processQueues();
+//        }
+//    },
+//    30000
+//);
 
 //Main function to maintain syncronization
 function handleSycronization(user, machine, key, password, origin, target) {
