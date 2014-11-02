@@ -4,15 +4,19 @@ I made this code to solve one basic problem i had. How to work with local files 
 
 ## Setup ##
 
+Get all dependencies:
+
+    npm install
+
 Create one user_list.json config file:
 
-cp config/user_list.json.dist config/user_list.json
+    cp config/user_list.json.dist config/user_list.json
 
 edit the file to add user, machine, private key location and private key passphrase password
 
 ## Usage ##
 
-./syncmaster USER@MACHINE ORIGIN_PATH/ DESTINATION_PATH/
+    ./syncmaster USER@MACHINE ORIGIN_PATH/ DESTINATION_PATH/
 
 ensure that origin path is one folder and ends with /, destination path is one path to a folder and ends with a / too.
 
