@@ -50,7 +50,7 @@ function setGlobalConnectionHandlers() {
         console.log(color("\nConnection closed!\n", 'red+underline'));
         //Create a new connection again...
 
-        eonnections.resetConnection();
+        connections.resetConnection();
     });
 }
 
