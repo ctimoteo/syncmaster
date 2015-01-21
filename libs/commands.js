@@ -1,3 +1,6 @@
+//Get my libs
+var moment = require( 'moment' );
+
 //Auxiliary function to add or modify files
 function sendFile(file, connection) {
     //Check active connection or enqueue request
@@ -13,16 +16,14 @@ function sendFile(file, connection) {
             },
             function(err) {
                 if (err) {
-                    //console.log('Error, transfering file: ' + origin + file);
                     //Send to logs
                     errors_log.debug(err);
                 }
                 else {
-                    console.log('sendedFile: ' + file);
+                  console.log('added file ' + moment().format('YYYY/MM/DD h:mm:ss') + ' ' + file);
                 }
-                //End operation
-                //active_sftp.end();
-            }        );
+            }
+        );
     }
     else {  //Ok, queue file change
         fileActionsQueue.push( { path: file, action: 'sendFile' })
@@ -37,15 +38,12 @@ function removeFile(file, connection) {
             target + file,
             function(err) {
                 if (err) {
-                    //console.log('FAILED to remove file: ' + target + file);
                     //Send to logs
                     errors_log.debug(err);
                 }
                 else {
-                    console.log('removedFile: ' + file);
+                  console.log('removed file ' + moment().format('YYYY/MM/DD h:mm:ss') + ' ' + file);
                 }
-                //End operation
-                //active_sftp.end();
             }
         );
     }
@@ -62,15 +60,12 @@ function addFolder(folder, connection) {
             target + folder,
             function(err) {
                 if (err) {
-                    //console.log('FAILED to remove file: ' + target + folder);
                     //Send to logs
                     errors_log.debug(err);
                 }
                 else {
-                    console.log('addedFolder: ' + folder);
+                  console.log('added folder ' + moment().format('YYYY/MM/DD h:mm:ss') + ' /' + folder);
                 }
-                //End operation
-                //active_sftp.end();
             }
         );
     }
@@ -88,15 +83,12 @@ function updateFolder(folder, connection) {
             target + folder,
             function(err) {
                 if ( err ) {
-                    //console.log('FAILED to unlink ' + target + folder);
                     //Send to logs
                     errors_log.debug(err);
                 }
                 else {
-                    console.log( 'removeFile:' + '/' + file );
+                  console.log('updated folder ' + moment().format('YYYY/MM/DD h:mm:ss') + ' /' + folder );
                 }
-                //End operation
-                //active_sftp.end();
             }
         );
     }
@@ -118,10 +110,8 @@ function deleteFolder(folder, connection) {
                     errors_log.debug(err);
                 }
                 else {
-                    console.log('removedFolder: ' + folder);
+                  console.log('removed folder ' + moment().format('YYYY/MM/DD h:mm:ss') + ' /' + folder);
                 }
-                //End operation
-                //active_sftp.end();
             }
         );
     }
