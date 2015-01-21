@@ -41,7 +41,7 @@ function checkScriptArgs() {
             color('DESTINATION_PATH', 'blue') + "\n"
         );
         //End process
-        return;
+        process.exit(1);
     }
     //Retrieve args data
     origin = argv[3];
@@ -71,7 +71,7 @@ function checkScriptArgs() {
         //Exit with error
         console.log("\n" + color('Invalid user@machine data: ', 'red') + ' ' + color(argv[2], 'blue') + "\n");
         //End process
-        return;
+        process.exit(1);
     }
     //Verify if key/password is configured for user/machine
     if (config[user] && config[user][machine] && config[user][machine].key && config[user][machine].password) {
@@ -84,7 +84,7 @@ function checkScriptArgs() {
         //Exit with error
         console.log("\n" + color('Failed to retrieve ssh key/password for user' + user + ' to machine ' + machine, 'red') + "\n");
         //End process
-        return;
+        process.exit(1);
     }
 }
 
