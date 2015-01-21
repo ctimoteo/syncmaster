@@ -39,7 +39,7 @@ catch (error) {
     //Exit with error
     console.log("\n" + color('Failed to load user key files config', 'red') + "\n");
     //End process
-    return;
+    process.exit(1);
 }
 
 //Check for script args
