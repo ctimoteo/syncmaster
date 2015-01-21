@@ -5,16 +5,16 @@
   "main": "index.js",
   "dependencies": {
     "ansi-color": "^0.2.1",
+    "array-events": "~0.1.3-beta",
     "bunyan": "^0.22.3",
     "carrier": "^0.1.14",
     "cli-prompt": "^0.4.1",
     "fsmonitor": "^0.2.4",
     "jsonlint": "^1.6.2",
-    "moment": "^2.8.3",
+    "moment": "^2.9.0",
     "rsync": "^0.3.0",
     "ssh2": "^0.2.25",
-    "vm": "0.0.1",
-    "array-events": "~0.1.3-beta"
+    "vm": "0.0.1"
   },
   "devDependencies": {},
   "scripts": {
