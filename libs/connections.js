@@ -21,8 +21,11 @@ function initializeConnection() {
 function resetConnection() {
     //Mark inactive connection
     active_connection = false;
-    //Start connection
-    connection.connect(OptionsForSFTP);
+
+    //Start connection after 1 minute
+    setTimeout(function () {
+        initializeConnection();
+    }, 60000);
 }
 
 //Expose handlers public API
